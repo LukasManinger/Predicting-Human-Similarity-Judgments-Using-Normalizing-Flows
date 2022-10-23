@@ -7,15 +7,13 @@ import argparse
 import datetime
 import json
 
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from matplotlib import pyplot as plt
-from tensorflow import keras
-
 from src import ROOT_DIR
+from tensorflow import keras
 
 sns.set_theme("paper", "whitegrid", "Dark2", "SejaVu Sans", rc={"figure.dpi": 100})
 
@@ -75,7 +73,6 @@ parser.add_argument("--preprocess_mode", default=2, type=int)
 parser.add_argument("--epochs", default=10, type=int)
 parser.add_argument("--batch_size", default=64, type=int)
 parser.add_argument("--learning_rate", default=1e-3, type=float)
-# parser.add_argument("--optimizer_global_clipnorm", default=1.0, type=float)
 parser.add_argument("--cosine_decay_steps", default=1000, type=int)
 parser.add_argument("--cosine_decay_t_mul", default=2.0, type=float)
 parser.add_argument("--cosine_decay_m_mul", default=1.0, type=float)
@@ -93,12 +90,10 @@ HPS = {
     "IMAGE_SIZE": 128,
     "FIT_VERBOSE": cmd_args.fit_verbose,
     "PREPROCESS_MODE": cmd_args.preprocess_mode,
-    # "CENTRAL_CROP_FRACTION": 0.8,
     "SEED": cmd_args.seed,
     "EPOCHS": cmd_args.epochs,
     "BATCH_SIZE": cmd_args.batch_size,
     "LEARNING_RATE": cmd_args.learning_rate,
-    # "OPTIMIZER_GLOBAL_CLIPNORM": cmd_args.optimizer_global_clipnorm,
     "COSINE_DECAY_STEPS": cmd_args.cosine_decay_steps,
     "COSINE_DECAY_T_MUL": cmd_args.cosine_decay_t_mul,
     "COSINE_DECAY_M_MUL": cmd_args.cosine_decay_m_mul,
@@ -125,16 +120,12 @@ tf.random.set_seed(HPS["SEED"])
     with_info=True,
     data_dir=HPS["TFDS_DATA_DIR"],
 )
-# as_supervised=True?
-# print(info)
 
 train_data = train_data.shuffle(len(train_data), reshuffle_each_iteration=True)
 
 train_images = train_data.map(lambda x: preprocess(x, True)).batch(HPS["BATCH_SIZE"])
-# train_labels = train_data.map(lambda t: t["label"]).batch(HPS["BATCH_SIZE"])
 
 test_images = test_data.map(lambda x: preprocess(x, False)).batch(HPS["BATCH_SIZE"])
-# test_labels = test_data.map(lambda t: t["label"]).batch(HPS["BATCH_SIZE"])
 
 # MODEL
 
@@ -143,20 +134,11 @@ model = keras.applications.resnet50.ResNet50(
     weights=None,
     input_tensor=None,
     input_shape=(HPS["IMAGE_SIZE"], HPS["IMAGE_SIZE"], 3),
-    # pooling="avg",
     classes=200,
 )
 # model.summary()
 
 # LEARNING
-
-# class PrintLearningRate(Callback):
-#     def __init__(self):
-#         pass
-
-#     def on_epoch_begin(self, epoch, logs=None):
-#         lr = K.eval(self.model.optimizer._decayed_lr(tf.float64)
-#         print("\nLearning rate at epoch {} is {}".format(epoch, lr)))
 
 lr_schedule = keras.optimizers.schedules.CosineDecayRestarts(
     HPS["LEARNING_RATE"],
@@ -175,16 +157,13 @@ history = model.fit(
     train_images, epochs=HPS["EPOCHS"], validation_data=test_images, verbose=HPS["FIT_VERBOSE"]
 )
 
-# print(model.optimizer.lr.get_config())
-# print(f"{model.optimizer.learning_rate = }")
-
 # PLOTTING
 
 fig, axs = plt.subplots(2, 1, sharex=True, constrained_layout=True)
 
 axs[0].plot(history.history["loss"], label="loss")
 axs[0].plot(history.history["val_loss"], label="val_loss")
-# axs[0].set_xlabel('Epoch')
+# axs[0].set_xlabel("Epoch")
 axs[0].set_ylabel("Crossentropy")
 axs[0].legend()
 

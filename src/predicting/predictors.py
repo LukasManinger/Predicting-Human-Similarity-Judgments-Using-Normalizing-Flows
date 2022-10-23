@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
-from glow_additive_network import GlowAdditiveNetwork
+from src.glow.glow_additive_network import GlowAdditiveNetwork
 from numpy import typing as npt
 from tensorflow import keras
 from tensorflow_probability import bijectors as tfb
