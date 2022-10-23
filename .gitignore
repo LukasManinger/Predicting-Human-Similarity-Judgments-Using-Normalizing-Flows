@@ -1,3 +1,14 @@
+src/data/downloads
+src/data/caltech_birds2011
+
+
+#src/glow/safe
+#src/resnet/safe
+#src/pca/safe
+
+
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
