@@ -6,16 +6,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import argparse
 import csv
 import datetime
-from collections import namedtuple
 from typing import Callable, List, Union
 
 import numpy as np
 import psiz
 from numpy import typing as npt
+from src import ROOT_DIR
 from tensorflow import keras
 from tqdm import tqdm
 
-from src import ROOT_DIR
 from image_manager import ImageManager
 from predictors import (
     GlowBayesPredictor,
@@ -38,8 +37,6 @@ def main() -> None:
     print(f"{cmd_args = }")
 
     obs, catalog = psiz.datasets.load_dataset("birds-16", verbose=1)
-    # print(obs, type(obs))
-    # print(catalog, type(catalog))
 
     image_manager = ImageManager(catalog, cmd_args.disable_tqdm)
 
@@ -92,7 +89,6 @@ def main() -> None:
     else:
         raise ValueError("Invalid argument: 'predictor'!")
 
-    # results = []
     results_8c2 = []
     results_2c1 = []
 
@@ -109,23 +105,13 @@ def main() -> None:
 
         trial_type = f"{n_reference}choose{n_select}"
 
-        # result = evaluate_prediction(trial_type, stimulus, prediction)
         result = triplet_accuracy(trial_type, stimulus, prediction)
-
-        # print(" ----- ")
-        # print(stimulus)
-        # # print(prediction)
-        # print([p.id for p in prediction])
-        # print(result)
 
         if trial_type == "8choose2":
             results_8c2.append(result)
         else:
             assert trial_type == "2choose1"
             results_2c1.append(result)
-
-        # if i > 10:
-        #     break
 
         if cmd_args.disable_tqdm and i % 1000 == 0:
             print(f"Predicting stimuli: {i} / {obs.n_trial}")
@@ -147,10 +133,6 @@ def main() -> None:
 
     print(np.mean(results_8c2), np.mean(results_2c1))
 
-    # plot_percentages(
-    #    [np.mean(results_8c2 + results_2c1), np.mean(results_8c2), np.mean(results_2c1)]
-    # )
-
 
 def arg_parsing():
     parser = argparse.ArgumentParser()
@@ -167,41 +149,9 @@ def arg_parsing():
     return parser.parse_args()
 
 
-def evaluate_prediction(
-    trial_type: str, ranked_observation: npt.NDArray[np.int_], prediction
-) -> float:
-    print("Deprecation warning!")
-
-    # Triplet accuracy (or not)
-    if trial_type == "8choose2":
-        # TODO Check if this is right
-        correct = 0
-        if ranked_observation[1] == prediction[1].id:
-            correct += 7
-        elif ranked_observation[1] == prediction[2].id:
-            correct += 6
-
-        if ranked_observation[2] == prediction[2].id:
-            if ranked_observation[1] == prediction[1].id:
-                correct += 6
-            else:
-                correct += 5
-        elif ranked_observation[2] == prediction[1].id:
-            correct += 6
-
-        return correct / 13
-
-    elif trial_type == "2choose1":
-        return float(ranked_observation[1] == prediction[1].id)
-
-    else:
-        raise ValueError("Invalid trial_type!")
-
-
 def triplet_accuracy(
-    trial_type: str, ranked_observation: npt.NDArray[np.int_], prediction
+    trial_type: str, ranked_observation: npt.NDArray[np.int_], prediction: List
 ) -> Union[int, List[int]]:
-    # Apparently this is equivalent to the upper evaluation method
     if trial_type == "8choose2":
         pred_ids = np.array([p.id for p in prediction])
         # counter = 0
@@ -211,25 +161,18 @@ def triplet_accuracy(
         a = ranked_observation[1]
         a_pred_idx = np.asarray(pred_ids == a).nonzero()[0][0]
         for i in range(2, 9):
-            # if a_pred_idx > 2:
-            #    break
 
             other = ranked_observation[i]
-            # counter += a_pred_idx < np.asarray(pred_ids == other).nonzero()[0][0]
             results.append(int(a_pred_idx < np.asarray(pred_ids == other).nonzero()[0][0]))
 
         # Second choice
         b = ranked_observation[2]
         b_pred_idx = np.asarray(pred_ids == b).nonzero()[0][0]
         for i in range(3, 9):
-            # if b_pred_idx > 2:
-            #    break
 
             other = ranked_observation[i]
-            # counter += b_pred_idx < np.asarray(pred_ids == other).nonzero()[0][0]
             results.append(int(b_pred_idx < np.asarray(pred_ids == other).nonzero()[0][0]))
 
-        # return counter / 13
         return results
 
     elif trial_type == "2choose1":
@@ -253,45 +196,5 @@ def save_results(results_8c2, results_2c1, file_name, header: List[str] = [""]):
             csv_writer.writerow(["2choose1", result])
 
 
-def calc_chance_level():
-    # Just testing
-    ReferenceSimilarity = namedtuple("ReferenceSimilarity", ["id", "similarity"])
-
-    obs, catalog = psiz.datasets.load_dataset("birds-16", verbose=1)
-
-    # correct = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
-    correct = np.array([-1, 0, 1, 2, 3, 4, 5, 6, 7])
-
-    result = []
-    result_alt = []
-
-    print(len(obs.outcome_idx_list[0]))
-
-    # Wrong: outcomes are outcomes for trials not responses
-    for outcome in obs.outcome_idx_list[0]:
-        print(outcome)
-
-        outcome = [ReferenceSimilarity(out, 0.0) for out in outcome]
-        outcome.insert(0, ReferenceSimilarity(-1, 0.0))
-        result.append(evaluate_prediction("8choose2", correct, outcome))
-        result_alt.append(triplet_accuracy("8choose2", correct, outcome))
-
-    print("chance level:", np.mean(result))
-    print("chance level:", np.mean(result_alt))
-
-    count_8c2 = 0
-    count_2c1 = 0
-
-    for n_reference in obs.n_reference:
-        if n_reference == 8:
-            count_8c2 += 1
-        elif n_reference == 2:
-            count_2c1 += 1
-
-    print("8c2:", count_8c2)
-    print("2c1:", count_2c1)
-
-
 if __name__ == "__main__":
     main()
-    # calc_chance_level()

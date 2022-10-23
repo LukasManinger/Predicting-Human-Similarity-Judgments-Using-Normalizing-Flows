@@ -167,7 +167,8 @@ class GlowPredictor(Predictor):
 
         checkpoint = tf.train.Checkpoint(self.glow)
 
-        checkpoint_path = f"{self.hps['CHECKPOINT_DIR']}-{math.floor(self.hps['EPOCHS'] / self.hps['CHECKPOINT_FREQ']) + 1}"
+        safe_path = hps_path.replace("hyperparameters.json", "", 1)
+        checkpoint_path = f"{safe_path}/checkpoints/ckpt-{math.floor(self.hps['EPOCHS'] / self.hps['CHECKPOINT_FREQ']) + 1}"
         status = checkpoint.restore(checkpoint_path)
         status.assert_consumed().assert_existing_objects_matched().assert_nontrivial_match()
 
@@ -188,34 +189,6 @@ class GlowPredictor(Predictor):
             if self.disable_tqdm and (id - 1) % 50 == 0:
                 print(f"Converting images: {(id - 1)} / {len(self.image_manager.images)}")
 
-    # def predict(self, ranked_observations: npt.NDArray[np.int_]) -> List[ReferenceSimilarity]:
-    #     ranked_observations = np.delete(ranked_observations, np.where(ranked_observations == 0))
-
-    #     images = tf.stack(
-    #         [
-    #             self.image_manager.images[ranked_observation]
-    #             for ranked_observation in ranked_observations
-    #         ]
-    #     )
-    #     zs = self.glow.inverse(images)
-
-    #     prediction = []
-
-    #     query = zs[0]
-
-    #     for i, reference_id in enumerate(ranked_observations):
-    #         #if reference_id == 0:
-    #         #    break
-
-    #         reference = zs[i]
-
-    #         similarity = ReferenceSimilarity(reference_id, self.calc_similarity(query, reference))
-    #         prediction.append(similarity)
-
-    #     prediction.sort(key=lambda ref_sim: ref_sim.similarity)
-
-    #     return prediction
-
 
 class GlowSimplePredictor(GlowPredictor):
     def __init__(
@@ -227,22 +200,6 @@ class GlowSimplePredictor(GlowPredictor):
 
     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
         return self.dist(query, reference).numpy()
-
-
-# class GlowEuclideanPredictor(GlowPredictor):
-#     def __init__(self, image_manager: ImageManager, hps_path: str, disable_tqdm: bool) -> None:
-#         super().__init__(image_manager, hps_path, disable_tqdm)
-
-#     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
-#         return tf.linalg.global_norm([query - reference]).numpy()
-
-
-# class GlowCosinePredictor(GlowPredictor):
-#     def __init__(self, image_manager: ImageManager, hps_path: str, disable_tqdm: bool) -> None:
-#         super().__init__(image_manager, hps_path, disable_tqdm)
-
-#     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
-#         return keras.losses.cosine_similarity(query, reference).numpy()
 
 
 class GlowBayesPredictor(GlowPredictor):
@@ -287,7 +244,6 @@ class GlowWeightedPredictor(GlowPredictor):
     ) -> None:
         super().__init__(image_manager, dist, hps_path, disable_tqdm)
 
-        # ztake = [bs[1] * 4 ** (i + 2) for i, bs in enumerate(self.glow.blockwise_splits)]
         ztake = [
             round(
                 bs[1] * 4 ** (i + math.log2(self.hps["IMAGE_SIZE"]) - self.hps["NUM_GLOW_BLOCKS"])
@@ -303,18 +259,13 @@ class GlowWeightedPredictor(GlowPredictor):
 
         distances = []
         for query_split, reference_split in zip(query_zsplits, reference_zsplits):
-            # print(query_split.shape, reference_split.shape)
             if tf.size(query_split).numpy() == 0:
                 continue
 
             distance = self.dist(query_split, reference_split).numpy()
             distances.append(distance)
 
-        # print(distances)
         return np.mean(distances)
-
-        # diff = query - reference
-        # return tf.linalg.global_norm([query - reference]).numpy()
 
 
 class GlowHalfPredictor(GlowPredictor):
