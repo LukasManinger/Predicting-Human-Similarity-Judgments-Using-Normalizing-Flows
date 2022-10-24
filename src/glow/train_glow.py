@@ -23,41 +23,86 @@ from tqdm import tqdm, trange
 
 sns.set_theme("paper", "whitegrid", "Dark2", "SejaVu Sans", rc={"figure.dpi": 100})
 
+
 def arg_parsing():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", default="caltech_birds2011", type=str, help="Dataset for training. Only tested for caltech_birds.")
-    parser.add_argument("--train_slice", default="train+test[:80%]", type=str, help="Train slice/split for dataset.")
-    parser.add_argument("--test_slice", default="test[80%:]", type=str, help="Test slice/split for dataset.")
-    parser.add_argument("--image_size", default=32, type=int, help="Size to which images are scaled down.")
-    parser.add_argument("--central_crop_fraction", default=0.8, type=float, help="Fraction of image to crop during preprocessing.")
+    parser.add_argument(
+        "--dataset",
+        default="caltech_birds2011",
+        type=str,
+        help="Dataset for training. Only tested for caltech_birds.",
+    )
+    parser.add_argument(
+        "--train_slice", default="train+test[:80%]", type=str, help="Train slice/split for dataset."
+    )
+    parser.add_argument(
+        "--test_slice", default="test[80%:]", type=str, help="Test slice/split for dataset."
+    )
+    parser.add_argument(
+        "--image_size", default=32, type=int, help="Size to which images are scaled down."
+    )
+    parser.add_argument(
+        "--central_crop_fraction",
+        default=0.8,
+        type=float,
+        help="Fraction of image to crop during preprocessing.",
+    )
     parser.add_argument("--preprocess_mode", default=3, type=int, help="Changes preprocessing.")
     parser.add_argument("--n_bits", default=5, type=int, help="Number of bits to reduce images to.")
     parser.add_argument("--not_disable_tqdm", action="store_false", help="Show progress bars.")
     parser.add_argument("--num_glow_blocks", default=3, type=int, help="Value of 'L' of Glow.")
     parser.add_argument("--num_steps_per_block", default=32, type=int, help="Value of 'K' of Glow.")
-    parser.add_argument("--coupling_bijector_fn", default="GlowDefaultNetwork", type=str, help="Affine or additive coupling.")
-    parser.add_argument("--grab_after_block", default=None, type=tuple, help="Proportion of dimensions to extract after block.")
-    parser.add_argument("--not_use_actnorm", action="store_false", help="Don't use activation normalization.")
+    parser.add_argument(
+        "--coupling_bijector_fn",
+        default="GlowDefaultNetwork",
+        type=str,
+        help="Affine or additive coupling.",
+    )
+    parser.add_argument(
+        "--grab_after_block",
+        default=None,
+        type=tuple,
+        help="Proportion of dimensions to extract after block.",
+    )
+    parser.add_argument(
+        "--not_use_actnorm", action="store_false", help="Don't use activation normalization."
+    )
     parser.add_argument("--seed", default=None, type=int, help="Seed.")
     parser.add_argument("--epochs", default=10, type=int, help="Number of epochs.")
     parser.add_argument("--batch_size", default=16, type=int, help="Batch size.")
     parser.add_argument("--learning_rate", default=1e-5, type=float, help="Initial learning rate.")
-    parser.add_argument("--optimizer_clipvalue", default=10.0, type=float, help="Clips gradient value.")
-    parser.add_argument("--optimizer_global_clipnorm", default=1.0, type=float, help="Clips gradient norm.")
+    parser.add_argument(
+        "--optimizer_clipvalue", default=10.0, type=float, help="Clips gradient value."
+    )
+    parser.add_argument(
+        "--optimizer_global_clipnorm", default=1.0, type=float, help="Clips gradient norm."
+    )
     parser.add_argument("--adam_epsilon", default=1e-7, type=float, help="See Adam.")
-    parser.add_argument("--cosine_decay_steps", default=10, type=int, help="See CosineDecayRestarts.")
-    parser.add_argument("--cosine_decay_t_mul", default=2.0, type=float, help="See CosineDecayRestarts.")
-    parser.add_argument("--cosine_decay_m_mul", default=1.0, type=float, help="See CosineDecayRestarts.")
-    parser.add_argument("--cosine_decay_alpha", default=0.0, type=float, help="See CosineDecayRestarts. Use 1.0 to disable scheduling.")
-    parser.add_argument("--checkpoint_freq", default=10, type=int, help="How frequently a checkpoint is created.")
+    parser.add_argument(
+        "--cosine_decay_steps", default=10, type=int, help="See CosineDecayRestarts."
+    )
+    parser.add_argument(
+        "--cosine_decay_t_mul", default=2.0, type=float, help="See CosineDecayRestarts."
+    )
+    parser.add_argument(
+        "--cosine_decay_m_mul", default=1.0, type=float, help="See CosineDecayRestarts."
+    )
+    parser.add_argument(
+        "--cosine_decay_alpha",
+        default=0.0,
+        type=float,
+        help="See CosineDecayRestarts. Use 1.0 to disable scheduling.",
+    )
+    parser.add_argument(
+        "--checkpoint_freq", default=10, type=int, help="How frequently a checkpoint is created."
+    )
     parser.add_argument("--name", default="tfp_glow", type=str, help="Name of model (folder).")
 
     return parser.parse_args()
 
 
 def preprocess(x: tf.Tensor) -> tf.Tensor:
-    # TODO reduce bits?
     if HPS["PREPROCESS_MODE"] == 0:
         print("Warning: PREPROCESS_MODE == 0 is deprecated")
         # Cast to float
@@ -174,7 +219,6 @@ def save_samples(temps: List[float], epoch: str = "") -> None:
 
 @tf.function
 def train_step(images: tf.Tensor) -> float:
-    # if HPS["PREPROCESS_MODE"] == 3:  # FIXME
     images += tf.random.uniform(images.shape, 0.0, 1.0 / HPS["N_BINS"])
 
     with tf.GradientTape() as tape:
@@ -182,10 +226,8 @@ def train_step(images: tf.Tensor) -> float:
 
     gradients = tape.gradient(loss, trainable_vars)
     optimizer.apply_gradients(zip(gradients, trainable_vars))
-    # Or optimizer.minimize(loss, trainable_vars)
 
     return tf.reduce_mean(loss)
-    # epoch_train_loss(loss)
 
 
 @tf.function
@@ -193,7 +235,6 @@ def test_step(images: tf.Tensor) -> float:
     test_loss = loss_object(px, images)
 
     return tf.reduce_mean(test_loss)
-    # epoch_test_loss(test_loss)
 
 
 # ----- Start -----
@@ -236,11 +277,8 @@ if __name__ == "__main__":
         "COSINE_DECAY_T_MUL": cmd_args.cosine_decay_t_mul,
         "COSINE_DECAY_M_MUL": cmd_args.cosine_decay_m_mul,
         "COSINE_DECAY_ALPHA": cmd_args.cosine_decay_alpha,
-        # "TEMPERATURE": 0.7,  # Not used currently  # For testing a lower temp is probably better
         # -----
         "CHECKPOINT_FREQ": cmd_args.checkpoint_freq,
-        # "PRINT_FREQ": 100,
-        # "TEST_PRINT_FREQ": ...,
         # -----
         "NAME": cmd_args.name,
         "ID": ...,
@@ -251,8 +289,6 @@ if __name__ == "__main__":
         "HYPERPARAMETERS_DIR": ...,
         "CHECKPOINT_DIR": ...,
         "EPOCH_RESULTS_DIR": ...,
-        # "TRAIN_LOSSES_TXT": ...,
-        # "TEST_LOSSES_TXT": ...,
         "SAMPLE_DIR": ...,
     }
 
@@ -260,20 +296,13 @@ if __name__ == "__main__":
 
     HPS["OUTPUT_SHAPE"] = (HPS["IMAGE_SIZE"], HPS["IMAGE_SIZE"], 3)
 
-    # HPS["COSINE_DECAY_STEPS"] = max(HPS["EPOCHS"] - 1, 1)
-
-    # HPS["TEST_PRINT_FREQ"] = HPS["PRINT_FREQ"] // 10
-
     HPS["ID"] = f"{HPS['NAME']}_{now}"
 
-    # HPS["TFDS_DATA_DIR"] = f"{HPS['DIR']}/tfds_data_dir"
     HPS["SAFE_DIR"] = f"{HPS['DIR']}/safe/{HPS['ID']}"
 
     HPS["HYPERPARAMETERS_DIR"] = f"{HPS['SAFE_DIR']}/hyperparameters.json"
     HPS["CHECKPOINT_DIR"] = f"{HPS['SAFE_DIR']}/checkpoints/ckpt"
     HPS["EPOCH_RESULTS_DIR"] = f"{HPS['SAFE_DIR']}/epoch_results.csv"
-    # HPS["TRAIN_LOSSES_TXT"] = f"{HPS['SAFE_DIR']}/train_losses.txt"
-    # HPS["TEST_LOSSES_TXT"] = f"{HPS['SAFE_DIR']}/test_losses.txt"
     HPS["SAMPLE_DIR"] = f"{HPS['SAFE_DIR']}/samples"
 
     os.makedirs(HPS["SAFE_DIR"], exist_ok=True)
@@ -293,7 +322,6 @@ if __name__ == "__main__":
         with_info=True,
         data_dir=HPS["TFDS_DATA_DIR"],
     )
-    # Images are of type tf.uint8
 
     train_data = train_data.shuffle(len(train_data), reshuffle_each_iteration=True)
 
@@ -359,7 +387,7 @@ if __name__ == "__main__":
         )
         loss_object = negll_per_dim_loss
         # Probably calculates nats per dimension
-        # You would neet to divide by log(2) * num_dimensions to get bits
+        # You would need to divide by log(2) * num_dimensions to get bits
 
     lr_scheduler = tf.keras.optimizers.schedules.CosineDecayRestarts(
         HPS["LEARNING_RATE"],
@@ -398,17 +426,10 @@ if __name__ == "__main__":
         ]
     )
 
-    # Clears all TXT files
-    # open(HPS["TRAIN_LOSSES_TXT"], "w").close()
-    # open(HPS["TEST_LOSSES_TXT"], "w").close()
-
     trainable_vars = glow.trainable_variables
 
     for epoch in trange(HPS["EPOCHS"], desc="Epoch", position=0, leave=True):
-        # Reset the metrics at the start of the next epoch
-        # epoch_train_loss.reset_states()
-        # epoch_test_loss.reset_states()
-
+        # LR scheduling
         optimizer.learning_rate = lr_scheduler(epoch)
 
         for i, images in enumerate(
@@ -416,10 +437,6 @@ if __name__ == "__main__":
         ):
             l = train_step(images)
             train_losses.append(l)
-
-            # if i % HPS["PRINT_FREQ"] == 0:
-            #    with open(HPS["TRAIN_LOSSES_TXT"], "a") as file:
-            #        file.write(f"{l}\n")
 
         # If loss is nan the model won't recover from it and we can stop the training
         if tf.math.is_nan(l):
@@ -431,10 +448,6 @@ if __name__ == "__main__":
         ):
             l = test_step(test_images)
             test_losses.append(l)
-
-            # if j % HPS["TEST_PRINT_FREQ"] == 0:
-            #    with open(HPS["TEST_LOSSES_TXT"], "a") as file:
-            #        file.write(f"{l}\n")
 
         if epoch % HPS["CHECKPOINT_FREQ"] == 0:
             checkpoint.save(HPS["CHECKPOINT_DIR"])
@@ -464,9 +477,6 @@ if __name__ == "__main__":
 
         train_losses = []
         test_losses = []
-
-        # epoch_train_losses.append(epoch_train_loss.result())
-        # epoch_test_losses.append(epoch_test_loss.result())
 
     # After training
     checkpoint.save(HPS["CHECKPOINT_DIR"])

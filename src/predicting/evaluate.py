@@ -137,14 +137,48 @@ def main() -> None:
 def arg_parsing():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("predictor", metavar="PREDICTOR", type=str, help="Which predictor to use. One of: 'simple', 'random', glow_simple', 'glow_bayes', glow_weighted', 'glow_half', 'pca', 'resnet'.")
+    parser.add_argument(
+        "predictor",
+        metavar="PREDICTOR",
+        type=str,
+        help=(
+            "Which predictor to use. One of: 'simple', 'random', glow_simple', 'glow_bayes', "
+            "glow_weighted', 'glow_half', 'pca', 'resnet'."
+        ),
+    )
 
-    parser.add_argument("--dist", type=str, default="mse", help="Which distance metric to use. One of: 'mse', 'cos'.")
-    parser.add_argument("--disable_tqdm", type=int, default=0, help="Whether to show progress bars.")
-    parser.add_argument("--hps_path", type=str, help="Mandatory if predictor is Glow or ResNet. Path to 'hyperparameters.json'.")
-    parser.add_argument("--data_sigma", type=float, default=1.0, help="Sets standard deviation of likelihood when using 'glow_bayes'.")
-    parser.add_argument("--emb_name", type=str, default="pca_emb_10", help="Quasi mandatory if predictor is 'pca'. Name of file in which results are stored.")
-    parser.add_argument("--layer_to_use", type=int, default=-1, help="Which layer to use when using 'resnet'. E.g., -1 or -2.")
+    parser.add_argument(
+        "--dist",
+        type=str,
+        default="mse",
+        help="Which distance metric to use. One of: 'mse', 'cos'.",
+    )
+    parser.add_argument(
+        "--disable_tqdm", type=int, default=0, help="Whether to show progress bars."
+    )
+    parser.add_argument(
+        "--hps_path",
+        type=str,
+        help="Mandatory if predictor is Glow or ResNet. Path to 'hyperparameters.json'.",
+    )
+    parser.add_argument(
+        "--data_sigma",
+        type=float,
+        default=1.0,
+        help="Sets standard deviation of likelihood when using 'glow_bayes'.",
+    )
+    parser.add_argument(
+        "--emb_name",
+        type=str,
+        default="pca_emb_10",
+        help="Quasi mandatory if predictor is 'pca'. Name of file in which results are stored.",
+    )
+    parser.add_argument(
+        "--layer_to_use",
+        type=int,
+        default=-1,
+        help="Which layer to use when using 'resnet'. E.g., -1 or -2.",
+    )
 
     return parser.parse_args()
 
@@ -154,7 +188,6 @@ def triplet_accuracy(
 ) -> Union[int, List[int]]:
     if trial_type == "8choose2":
         pred_ids = np.array([p.id for p in prediction])
-        # counter = 0
         results = []
 
         # First choice

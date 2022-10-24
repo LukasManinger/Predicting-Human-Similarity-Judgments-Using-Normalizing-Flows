@@ -5,18 +5,15 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 from numpy import typing as npt
 from psiz.catalog.catalog import Catalog
+from src import ROOT_DIR
 from tensorflow import keras
 from tqdm import tqdm
-
-from src import ROOT_DIR
 
 
 class ImageManager:
     def __init__(self, catalog: Catalog, disable_tqdm: bool) -> None:
         self.catalog = catalog
         self.disable_tqdm = disable_tqdm
-
-        # self.load_images()
 
     def load_images(
         self,

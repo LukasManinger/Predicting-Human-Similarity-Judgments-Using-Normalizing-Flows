@@ -30,25 +30,6 @@ class Predictor:
             return tensor
 
     def predict(self, ranked_observations: npt.NDArray[np.int_]) -> List[ReferenceSimilarity]:
-        # ranked_observations = np.delete(ranked_observations, np.where(ranked_observations == 0))
-
-        # prediction = []
-
-        # query = self.image_manager.images[ranked_observations[0]]
-
-        # for reference_id in ranked_observations:
-        #     if reference_id == 0:
-        #         break
-
-        #     reference = self.image_manager.images[reference_id]
-
-        #     similarity = ReferenceSimilarity(reference_id, self.calc_similarity(query, reference))
-        #     prediction.append(similarity)
-
-        # prediction.sort(key=lambda ref_sim: ref_sim.similarity)
-
-        # return prediction
-
         ranked_observations = np.delete(ranked_observations, np.where(ranked_observations == 0))
 
         prediction = []
@@ -61,8 +42,6 @@ class Predictor:
             similarity = ReferenceSimilarity(reference_id, self.calc_similarity(query, reference))
             prediction.append(similarity)
 
-        # shuffle(prediction)
-        # prediction.reverse()
         prediction.sort(key=lambda ref_sim: ref_sim.similarity)
 
         return prediction
@@ -88,8 +67,6 @@ class SimplePredictor(Predictor):
 
         self.image_manager.load_images(preprocess)
         self.convert()
-
-        # self.mse = keras.losses.MeanSquaredError()
 
     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
         return self.dist(query, reference).numpy()
@@ -196,8 +173,6 @@ class GlowSimplePredictor(GlowPredictor):
     ) -> None:
         super().__init__(image_manager, dist, hps_path, disable_tqdm)
 
-        # self.mse = keras.losses.MeanSquaredError()
-
     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
         return self.dist(query, reference).numpy()
 
@@ -235,7 +210,6 @@ class GlowBayesPredictor(GlowPredictor):
         )
 
         return self.dist(query_posterior_mean, reference_posterior_mean)
-        # return tf.linalg.global_norm([query_posterior_mean - reference_posterior_mean]).numpy()
 
 
 class GlowWeightedPredictor(GlowPredictor):
@@ -275,7 +249,7 @@ class GlowHalfPredictor(GlowPredictor):
         super().__init__(image_manager, dist, hps_path, disable_tqdm)
 
         self.mid = round(self.z_shape[0] / 2)
-    
+
     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
         return self.dist(query[: self.mid], reference[: self.mid]).numpy()
 
@@ -354,7 +328,6 @@ class ResnetPredictor(Predictor):
             tensor = tf.cast(tensor, tf.float32)
             tensor = keras.applications.resnet50.preprocess_input(tensor)
             tensor = tensor / 255
-            # tensor = tf.image.central_crop(tensor, 0.9)  # ???
             tensor = tf.image.resize(tensor, (self.hps["IMAGE_SIZE"], self.hps["IMAGE_SIZE"]))
 
             return tensor
@@ -369,17 +342,6 @@ class ResnetPredictor(Predictor):
 
         safe_path = hps_path.replace("hyperparameters.json", "", 1)
         model_path = f"{safe_path}/model"
-
-        # weights_path = f"{safe_path}/weights/model.tf"
-        # print(weights_path)
-        # print(self.hps["IMAGE_SIZE"])
-        # self.resnet = keras.applications.resnet50.ResNet50(
-        #     include_top=True,
-        #     weights=None,
-        #     input_shape=(self.hps["IMAGE_SIZE"], self.hps["IMAGE_SIZE"], 3),
-        #     classes=200,
-        # )
-        # self.resnet.load_weights(weights_path)
 
         self.resnet = keras.models.load_model(model_path)
 
@@ -406,16 +368,4 @@ class ResnetPredictor(Predictor):
                 print(f"Converting images: {(id - 1)} / {len(self.image_manager.images)}")
 
     def calc_similarity(self, query: tf.Tensor, reference: tf.Tensor) -> float:
-        return self.dist(query, reference).numpy()  # mean?
-        # return tf.linalg.global_norm([query - reference]).numpy()
-
-
-if __name__ == "__main__":
-    # p = MsePredictor(None)
-
-    p = ResnetPredictor(
-        None,
-        "/work/scratch/lm83qyjo/bt2/bachelor-thesis/bachelor_thesis/resnet50/safe/resnet_2022-10-04_12:13:59/hyperparameters.json",
-        -2,
-        0,
-    )
+        return self.dist(query, reference).numpy()
