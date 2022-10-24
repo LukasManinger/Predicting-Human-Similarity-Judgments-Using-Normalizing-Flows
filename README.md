@@ -3,13 +3,11 @@ Code for reproducing results in my thesis "Predicting Human Similarity Judgments
 
 ## Requirements
 
-The `requirement.txt` for a complete list of our Python environment.
+The `requirement.txt` for a complete list of our Python 3.9 environment.
 
 The main requirements are:
 
 ```
-python==3.9.*
-
 numpy==1.23.*
 scipy==1.9.*
 pandas==1.4.*
