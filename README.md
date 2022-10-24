@@ -64,8 +64,6 @@ parser.add_argument("--checkpoint_freq", default=10, type=int)
 parser.add_argument("--name", default="tfp_glow", type=str)
 ```
 
-Two pretrained models can be found at `src/glow/safe`, namely `128-2_2022-09-20_17:36:27` and `add-128-4_2022-10-03_01:11:41`.
-
 ### Train a ResNet
 
 ```
@@ -87,8 +85,6 @@ parser.add_argument("--cosine_decay_alpha", default=0.0, type=float)
 parser.add_argument("--fit_verbose", default=1, type=int)
 parser.add_argument("--name", default="resnet", type=str)
 ```
-
-One pretrained models can be found at `src/resnet/safe`, namely `resnet-D-2_2022-10-05_10:20:37`.
 
 ### Fit a PCA
 
