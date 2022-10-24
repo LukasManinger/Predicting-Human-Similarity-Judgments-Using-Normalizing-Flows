@@ -8,6 +8,8 @@ The `requirement.txt` for a complete list of our Python environment.
 The main requirements are:
 
 ```
+python==3.9.*
+
 numpy==1.23.*
 scipy==1.9.*
 pandas==1.4.*
