@@ -1,4 +1,4 @@
-# Predicting-Human-Similarity-Judgments-Using-Normalizing-Flows
+# Predicting Human Similarity Judgments Using Normalizing-Flows
 Code for reproducing results in my thesis "Predicting Human Similarity Judgments Using Normalizing Flows" (Cognitive Science B.Sc.).
 
 ## Requirements
