@@ -2,7 +2,7 @@
 
 Code for reproducing results in my thesis "Predicting Human Similarity Judgments Using Normalizing Flows" (Cognitive Science B.Sc.).
 
-References are available in [`poster_references.md`](poster_references.md)
+References are available in [`poster_references.md`](poster_references.md).
 
 ## Requirements
 
