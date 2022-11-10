@@ -35,7 +35,7 @@ python src/glow/train_glow.py
 
 Use `--help` to get information about optional command line arguments.
 
-A pretrained model can be downloaded from [Hessenbox](https://hessenbox.tu-darmstadt.de/getlink/fiJRjP6ivPqSrwBGKmQvELCC/Predicting%20Human%20Similarity%20Judgments%20Using%20Normalizing%20Flows). Just put `128-2_2022-09-20_17:36:27` or `add-128-4_2022-10-03_01:11:41` into `src/glow/safe`.
+Pretrained models can be downloaded from [Hessenbox](https://hessenbox.tu-darmstadt.de/getlink/fiJRjP6ivPqSrwBGKmQvELCC/Predicting%20Human%20Similarity%20Judgments%20Using%20Normalizing%20Flows). Just put `128-2_2022-09-20_17:36:27` or `add-128-4_2022-10-03_01:11:41` into `src/glow/safe`.
 
 ### Train a ResNet
 
@@ -45,7 +45,7 @@ python src/resnet/train_resnet.py
 
 Use `--help` to get information about optional command line arguments.
 
-Pretrained models can be downloaded from [Hessenbox](https://hessenbox.tu-darmstadt.de/getlink/fiJRjP6ivPqSrwBGKmQvELCC/Predicting%20Human%20Similarity%20Judgments%20Using%20Normalizing%20Flows). Just put `resnet-D-2_2022-10-05_10:20:37` into `src/resnet/safe`.
+A pretrained model can be downloaded from [Hessenbox](https://hessenbox.tu-darmstadt.de/getlink/fiJRjP6ivPqSrwBGKmQvELCC/Predicting%20Human%20Similarity%20Judgments%20Using%20Normalizing%20Flows). Just put `resnet-D-2_2022-10-05_10:20:37` into `src/resnet/safe`.
 
 ### Fit a PCA
 
