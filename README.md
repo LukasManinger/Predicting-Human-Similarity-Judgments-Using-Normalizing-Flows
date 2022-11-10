@@ -70,7 +70,7 @@ Results of our models are stored as CSVs at [`src/predicting/out`](src/predictin
 
 ### Other Visualizations
 
-The folder [`src/visualizations`](src/visualizations) contains some notebooks that we used :
+The folder [`src/visualizations`](src/visualizations) contains some notebooks that we used:
 
 - [`compression.ipynb`](src/visualizations/compression.ipynb) visualizes compression of a trained Glow
 - [`interpolation.ipynb`](src/visualizations/interpolation.ipynb) visualizes latent interpolation of a trained Glow
